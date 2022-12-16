@@ -1,9 +1,7 @@
 use sqlite::Connection;
 use std::path::PathBuf;
-mod commands;
-pub use commands::*;
-mod utils;
-pub use utils::*;
+pub mod commands;
+pub mod utils;
 
 enum DatabaseState {
     ReInitializing,

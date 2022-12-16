@@ -1,6 +1,9 @@
 use clap::Parser;
-use rusty_pass::{get_default_database_path, Cli, GenerateSubcommands, Subcommands};
-use rusty_pass::{Database, Password};
+use rusty_pass::{
+    commands::{generate::GenerateSubcommands, Cli, Subcommands},
+    utils::{password::Password, path::get_default_database_path},
+    Database,
+};
 use std::path::PathBuf;
 
 fn main() {
@@ -10,6 +13,7 @@ fn main() {
             let location = init
                 .location
                 .unwrap_or(PathBuf::from(get_default_database_path()));
+
             let database = Database::new(&location);
             if let Err(err) = database.init() {
                 println!("Unable to initialize database: {:?}", err);
