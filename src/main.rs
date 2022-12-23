@@ -3,7 +3,7 @@ use rusty_pass::{
     commands::{
         clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
     },
-    utils::{get_database, get_location, password::Password},
+    utils::{get_database, password::Password, path::get_location},
 };
 
 fn main() {

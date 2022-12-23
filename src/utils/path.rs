@@ -23,11 +23,14 @@ pub fn path_exists<'a>(path: &'a str) -> Result<PathBuf, String> {
     }
 }
 
-pub fn get_default_database_path() -> PathBuf {
+fn get_default_database_path() -> PathBuf {
     let home_dir = home::home_dir().expect("Unable to retrieve home directory");
     let rust_db = home_dir.join("rustdb");
     if !rust_db.is_dir() {
         create_dir_all(rust_db).expect("Unable to create directory");
     }
     home_dir.join("rustdb").join(DEFAULT_DATABASE_NAME)
+}
+pub fn get_location(location: Option<PathBuf>) -> PathBuf {
+    location.unwrap_or(PathBuf::from(get_default_database_path()))
 }
