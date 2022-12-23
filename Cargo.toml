@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.29", features = ["derive", "wrap_help"] }
-sqlite = { version = "0.30.3"}
 home = "0.5.4"
 rand = "0.8.5"
+rusqlite = { version = "0.28.0", features = ["bundled"] }

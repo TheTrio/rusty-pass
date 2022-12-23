@@ -1,23 +1,17 @@
 use clap::Parser;
 use rusty_pass::{
-    commands::{generate::GenerateSubcommands, Cli, Subcommands},
-    utils::{password::Password, path::get_default_database_path},
-    Database,
+    commands::{
+        clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
+    },
+    utils::{get_database, get_location, password::Password},
 };
-use std::path::PathBuf;
 
 fn main() {
     let cli = Cli::parse();
     match cli.commands {
         Subcommands::Init(init) => {
-            let location = init
-                .location
-                .unwrap_or(PathBuf::from(get_default_database_path()));
-
-            let database = Database::new(&location);
-            if let Err(err) = database.init() {
-                println!("Unable to initialize database: {:?}", err);
-            }
+            let location = get_location(init.location);
+            get_database(&location).expect("Unable to initialize/read database");
         }
         Subcommands::Generate(x) => {
             let password = match x.commands {
@@ -35,6 +29,40 @@ fn main() {
                 GenerateSubcommands::Simple { length } => Password::SimplePassword(length),
             };
             println!("{}", password.generate());
+        }
+        Subcommands::Insert(InsertArgs {
+            password,
+            username,
+            name,
+            location,
+        }) => {
+            let location = get_location(location);
+
+            let database = get_database(&location).expect("Unable to read database");
+            database.insert(&name, &username, &password)
+        }
+        Subcommands::Clear(clear::ClearArgs {
+            name,
+            location,
+            pattern: like,
+        }) => {
+            let location = get_location(location);
+
+            let database = get_database(&location).expect("Unable to read database");
+            database.clear(&name, like);
+        }
+        Subcommands::List(ListArgs {
+            location,
+            name,
+            pattern,
+        }) => {
+            let location = get_location(location);
+
+            let database = get_database(&location).expect("Unable to read database");
+            match database.list(name, pattern) {
+                Ok(_) => (),
+                Err(err) => println!("Encountered Error: {:?}", err.to_string()),
+            }
         }
     }
 }

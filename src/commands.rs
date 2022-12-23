@@ -1,7 +1,10 @@
 use clap::{Parser, Subcommand};
 
+pub mod clear;
 pub mod generate;
 pub mod init;
+pub mod insert;
+pub mod list;
 
 #[derive(Parser)]
 #[command(about = "A CLI password manager", long_about = None)]
@@ -14,4 +17,7 @@ pub struct Cli {
 pub enum Subcommands {
     Init(init::InitArgs),
     Generate(generate::GenerateArgs),
+    Insert(insert::InsertArgs),
+    Clear(clear::ClearArgs),
+    List(list::ListArgs),
 }
