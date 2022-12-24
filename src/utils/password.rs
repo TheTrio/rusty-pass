@@ -1,9 +1,6 @@
 use rand::{distributions::Uniform, seq::SliceRandom, Rng};
 
-const LOWER_CASE: &str = "abcdefghijklmnopqrstuvwxyz";
-const UPPER_CASE: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const NUMBERS: &str = "0123456789";
-const SYMBOLS: &str = "!@#$%^&*()_+-";
+use crate::constants::{NUMBERS, UPPER_CASE, LOWER_CASE, SYMBOLS};
 
 pub enum Password {
     SimplePassword(usize),

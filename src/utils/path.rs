@@ -1,5 +1,5 @@
+use crate::constants::DEFAULT_DATABASE_NAME;
 use std::{fs::create_dir_all, path::PathBuf};
-const DEFAULT_DATABASE_NAME: &str = "database.db";
 
 pub fn is_valid_path<'a>(path: &'a str) -> Result<PathBuf, String> {
     if path.starts_with("/") {

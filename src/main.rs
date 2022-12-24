@@ -4,14 +4,10 @@ use rusty_pass::{
     commands::{
         clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
     },
+    constants::TEMPLATE_EDITOR_INPUT,
     utils::{get_database, password::Password, path::get_location},
 };
 
-const TEMPLATE_EDITOR_INPUT: &str = "
-
-# The first line is treated as the password
-# Anything after the first line is ignored 
-";
 fn main() {
     let cli = Cli::parse();
     match cli.commands {
