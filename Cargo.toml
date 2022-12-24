@@ -10,3 +10,4 @@ clap = { version = "4.0.29", features = ["derive", "wrap_help"] }
 home = "0.5.4"
 rand = "0.8.5"
 rusqlite = { version = "0.28.0", features = ["bundled"] }
+edit = "0.1.4"

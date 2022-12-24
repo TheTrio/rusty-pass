@@ -1,4 +1,5 @@
-use clap::Parser;
+use clap::{error::ErrorKind, Command, Parser};
+use edit::edit;
 use rusty_pass::{
     commands::{
         clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
@@ -6,6 +7,11 @@ use rusty_pass::{
     utils::{get_database, password::Password, path::get_location},
 };
 
+const TEMPLATE_EDITOR_INPUT: &str = "
+
+# The first line is treated as the password
+# Anything after the first line is ignored 
+";
 fn main() {
     let cli = Cli::parse();
     match cli.commands {
@@ -31,13 +37,19 @@ fn main() {
             println!("{}", password.generate());
         }
         Subcommands::Insert(InsertArgs {
-            password,
             username,
             name,
             location,
         }) => {
             let location = get_location(location);
 
+            let text = edit(TEMPLATE_EDITOR_INPUT).expect("Unable to read from editor");
+            let password = text.split("\n").next().expect("The password is empty");
+            if password.is_empty() {
+                let mut cmd = Command::new("Enter password into the editor");
+                cmd.error(ErrorKind::InvalidValue, "The password cannot be empty")
+                    .exit();
+            }
             let database = get_database(&location).expect("Unable to read database");
             database.insert(&name, &username, &password)
         }

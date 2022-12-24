@@ -6,8 +6,6 @@ use std::path::PathBuf;
 pub struct InsertArgs {
     pub name: String,
     pub username: String,
-    pub password: String,
-
     #[arg(short, long, value_parser = path_exists)]
     pub location: Option<PathBuf>,
 }
