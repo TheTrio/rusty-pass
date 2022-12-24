@@ -5,7 +5,11 @@ use rusty_pass::{
         clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
     },
     constants::TEMPLATE_EDITOR_INPUT,
-    utils::{get_database, password::Password, path::get_location},
+    utils::{
+        get_database,
+        password::{generate_strict_password, Password},
+        path::get_location,
+    },
 };
 
 fn main() {
@@ -36,16 +40,25 @@ fn main() {
             username,
             name,
             location,
+            generate,
         }) => {
             let location = get_location(location);
-
-            let text = edit(TEMPLATE_EDITOR_INPUT).expect("Unable to read from editor");
-            let password = text.split("\n").next().expect("The password is empty");
-            if password.is_empty() {
-                let mut cmd = Command::new("Enter password into the editor");
-                cmd.error(ErrorKind::InvalidValue, "The password cannot be empty")
-                    .exit();
-            }
+            let password = if !generate {
+                let text = edit(TEMPLATE_EDITOR_INPUT).expect("Unable to read from editor");
+                let password = text
+                    .split("\n")
+                    .next()
+                    .map(String::from)
+                    .expect("The password is empty");
+                if password.is_empty() {
+                    let mut cmd = Command::new("Enter password into the editor");
+                    cmd.error(ErrorKind::InvalidValue, "The password cannot be empty")
+                        .exit();
+                }
+                password
+            } else {
+                generate_strict_password()
+            };
             let database = get_database(&location).expect("Unable to read database");
             database.insert(&name, &username, &password)
         }

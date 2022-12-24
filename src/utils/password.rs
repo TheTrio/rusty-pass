@@ -1,6 +1,9 @@
 use rand::{distributions::Uniform, seq::SliceRandom, Rng};
 
-use crate::constants::{NUMBERS, UPPER_CASE, LOWER_CASE, SYMBOLS};
+use crate::constants::{
+    DEFAULT_LOWERCASE_LENGTH, DEFAULT_NUMBERS_LENGTH, DEFAULT_SYMBOLS_LENGTH,
+    DEFAULT_UPPERCASE_LENGTH, LOWER_CASE, NUMBERS, SYMBOLS, UPPER_CASE,
+};
 
 pub enum Password {
     SimplePassword(usize),
@@ -79,4 +82,13 @@ fn generate_simple_password(length: usize) -> String {
         password.push(chars.chars().nth(random_index).unwrap());
     }
     password
+}
+
+pub fn generate_strict_password() -> String {
+    advance_generate_password(
+        DEFAULT_LOWERCASE_LENGTH,
+        DEFAULT_UPPERCASE_LENGTH,
+        DEFAULT_NUMBERS_LENGTH,
+        DEFAULT_SYMBOLS_LENGTH,
+    )
 }

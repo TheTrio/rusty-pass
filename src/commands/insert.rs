@@ -3,9 +3,22 @@ use clap::Args;
 use std::path::PathBuf;
 
 #[derive(Args)]
+#[command(
+    long_about = "Insert a new password into the database. If the -g flag is passed, a password of length 20 will be generated and inserted automatically. Else, you will be prompted to enter a password in your default editor",
+    about = "Insert a new password into the database. If the -g flag is passed, a password of length 20 will be generated and inserted automatically. Else, you will be prompted to enter a password in your default editor"
+)]
 pub struct InsertArgs {
     pub name: String,
     pub username: String,
+
     #[arg(short, long, value_parser = path_exists)]
     pub location: Option<PathBuf>,
+
+    #[arg(
+        short,
+        long,
+        default_value_t = false,
+        help = "Generate and insert a password of length 20 instead of prompting for the same"
+    )]
+    pub generate: bool,
 }

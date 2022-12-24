@@ -1,5 +1,8 @@
+use crate::constants::{
+    DEFAULT_LOWERCASE_LENGTH, DEFAULT_NUMBERS_LENGTH, DEFAULT_SYMBOLS_LENGTH,
+    DEFAULT_UPPERCASE_LENGTH,
+};
 use clap::{Args, Subcommand};
-
 #[derive(Args, Debug)]
 pub struct GenerateArgs {
     #[command(subcommand)]
@@ -18,16 +21,16 @@ pub enum GenerateSubcommands {
     },
     #[command(
         about = "This ensures that each character group has a minimum length",
-        long_about = "This ensures that each character group has a minimum length"
+        long_about = "This ensures that each character group has a minimum length. The default values are 10 for lower case, 5 for upper case, 2 for numbers and 3 for symbols."
     )]
     Strict {
-        #[arg(short, long, default_value_t = 10)]
+        #[arg(short, long, default_value_t = DEFAULT_LOWERCASE_LENGTH)]
         lower: usize,
-        #[arg(short, long, default_value_t = 5)]
+        #[arg(short, long, default_value_t = DEFAULT_UPPERCASE_LENGTH)]
         upper: usize,
-        #[arg(short, long, default_value_t = 5)]
+        #[arg(short, long, default_value_t = DEFAULT_SYMBOLS_LENGTH)]
         symbols: usize,
-        #[arg(short, long, default_value_t = 5)]
+        #[arg(short, long, default_value_t = DEFAULT_NUMBERS_LENGTH)]
         numbers: usize,
     },
 }
