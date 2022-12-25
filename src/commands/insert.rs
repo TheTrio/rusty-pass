@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 #[derive(Args)]
 #[command(
-    long_about = "Insert a new password into the database. If the -g flag is passed, a password of length 20 will be generated and inserted automatically. Else, you will be prompted to enter a password in your default editor",
-    about = "Insert a new password into the database. If the -g flag is passed, a password of length 20 will be generated and inserted automatically. Else, you will be prompted to enter a password in your default editor"
+    about = "Insert a new password into the database. If the -g flag is passed, a password of length 20 will be generated and inserted automatically. Else, you will be prompted to enter a password in your default editor",
+    long_about = "Insert a new password into the database. If the -g flag is passed, a password of length 20 will be generated and inserted automatically. Else, you will be prompted to enter a password in your default editor. This reads the master password from the environment variable RUSTY_MASTER_PASSWORD. If it is not set, it will prompt for the same"
 )]
 pub struct InsertArgs {
     pub name: String,

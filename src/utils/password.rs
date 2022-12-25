@@ -1,3 +1,5 @@
+use std::env;
+
 use rand::{distributions::Uniform, seq::SliceRandom, Rng};
 
 use crate::constants::{
@@ -91,4 +93,13 @@ pub fn generate_strict_password() -> String {
         DEFAULT_NUMBERS_LENGTH,
         DEFAULT_SYMBOLS_LENGTH,
     )
+}
+
+pub fn get_master_password() -> String {
+    let master_password = env::var("RUSTY_MASTER_PASSWORD");
+    let mut stdin_master_password = String::from("");
+    if master_password.is_err() {
+        stdin_master_password = rpassword::prompt_password("Your master password: ").unwrap();
+    }
+    master_password.unwrap_or(stdin_master_password)
 }

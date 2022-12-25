@@ -8,11 +8,10 @@ use rusty_pass::{
     utils::{
         crypto::encrypt,
         get_database,
-        password::{generate_strict_password, Password},
+        password::{generate_strict_password, get_master_password, Password},
         path::get_location,
     },
 };
-use std::env;
 
 fn main() {
     let cli = Cli::parse();
@@ -44,37 +43,31 @@ fn main() {
             location,
             generate,
         }) => {
-            let master_password = env::var("RUSTY_MASTER_PASSWORD");
-            if master_password.is_err() {
-                let mut cmd = Command::new("Master Password");
-                cmd.error(ErrorKind::InvalidValue, "The master password is not set. Set it using the RUSTY_MASTER_PASSWORD environment variable")
-                .exit();
+            let master_password = get_master_password();
+            let location = get_location(location);
+
+            let password = if !generate {
+                let text = edit(TEMPLATE_EDITOR_INPUT).expect("Unable to read from editor");
+                let mut lines = text.split("\n");
+                let password = lines
+                    .next()
+                    .map(String::from)
+                    .expect("The password is empty");
+                if password.is_empty() {
+                    let mut cmd = Command::new("Enter password into the editor");
+                    cmd.error(ErrorKind::InvalidValue, "The password cannot be empty")
+                        .exit();
+                }
+                password
             } else {
-                let master_password = master_password.unwrap();
-                let location = get_location(location);
-                let password = if !generate {
-                    let text = edit(TEMPLATE_EDITOR_INPUT).expect("Unable to read from editor");
-                    let mut lines = text.split("\n");
-                    let password = lines
-                        .next()
-                        .map(String::from)
-                        .expect("The password is empty");
-                    if password.is_empty() {
-                        let mut cmd = Command::new("Enter password into the editor");
-                        cmd.error(ErrorKind::InvalidValue, "The password cannot be empty")
-                            .exit();
-                    }
-                    password
-                } else {
-                    generate_strict_password()
-                };
-                let database = get_database(&location).expect("Unable to read database");
-                database.insert(
-                    &name,
-                    &username,
-                    &encrypt(String::from(master_password), password),
-                )
-            }
+                generate_strict_password()
+            };
+            let database = get_database(&location).expect("Unable to read database");
+            database.insert(
+                &name,
+                &username,
+                &encrypt(String::from(master_password), password),
+            )
         }
         Subcommands::Clear(clear::ClearArgs {
             name,
@@ -91,20 +84,13 @@ fn main() {
             name,
             pattern,
         }) => {
-            let master_password = env::var("RUSTY_MASTER_PASSWORD");
-            if master_password.is_err() {
-                let mut cmd = Command::new("Master Password");
-                cmd.error(ErrorKind::InvalidValue, "The master password is not set. Set it using the RUSTY_MASTER_PASSWORD environment variable")
-                .exit();
-            } else {
-                let master_password = master_password.unwrap();
-                let location = get_location(location);
+            let master_password = get_master_password();
+            let location = get_location(location);
 
-                let database = get_database(&location).expect("Unable to read database");
-                match database.list(name, master_password, pattern) {
-                    Ok(_) => (),
-                    Err(err) => println!("Encountered Error: {:?}", err.to_string()),
-                }
+            let database = get_database(&location).expect("Unable to read database");
+            match database.list(name, master_password, pattern) {
+                Ok(_) => (),
+                Err(err) => println!("Encountered Error: {:?}", err.to_string()),
             }
         }
     }
