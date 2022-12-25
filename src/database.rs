@@ -1,5 +1,8 @@
+use clap::{error::ErrorKind, Command};
 use rusqlite::{Connection, Result, Row};
 use std::path::PathBuf;
+
+use crate::utils::crypto::decrypt;
 enum DatabaseState {
     Reading,
     Initializing,
@@ -73,7 +76,7 @@ impl<'a> Database<'a> {
         }
     }
 
-    pub fn list(&self, name: Option<String>, pattern: bool) -> Result<()> {
+    pub fn list(&self, name: Option<String>, master_password: String, pattern: bool) -> Result<()> {
         let query = if let Some(_) = name {
             if pattern {
                 "SELECT id, name, username, password FROM Passwords WHERE name LIKE (?1);"
@@ -86,11 +89,22 @@ impl<'a> Database<'a> {
         let mut stmt = self.connection.prepare(query)?;
 
         let map_row_to_password = |row: &Row| {
+            let master_password = master_password.clone();
+            let password = decrypt(master_password, row.get(3)?);
+            if password.is_err() {
+                let mut cmd = Command::new("Master Password");
+                cmd.error(
+                    ErrorKind::InvalidValue,
+                    "Decryption Failed. Please check your master password",
+                )
+                .exit();
+            }
+            let password = password.unwrap();
             Ok(Password {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 username: row.get(2)?,
-                password: row.get(3)?,
+                password,
             })
         };
 

@@ -1,6 +1,7 @@
 use crate::database::Database;
 use std::path::PathBuf;
 
+pub mod crypto;
 pub mod password;
 pub mod path;
 

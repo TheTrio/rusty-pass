@@ -1,6 +1,7 @@
 pub const TEMPLATE_EDITOR_INPUT: &str = "
 
 # The first line is treated as the password
+
 # Anything after the first line is ignored 
 ";
 
