@@ -3,7 +3,7 @@ use rusqlite::{Connection, Result, Row};
 use std::path::PathBuf;
 
 use crate::utils::crypto::decrypt;
-enum DatabaseState {
+pub enum DatabaseState {
     Reading,
     Initializing,
 }
@@ -11,7 +11,7 @@ enum DatabaseState {
 pub struct Database<'a> {
     location: &'a PathBuf,
     connection: Connection,
-    state: DatabaseState,
+    pub state: DatabaseState,
 }
 
 #[derive(Debug)]

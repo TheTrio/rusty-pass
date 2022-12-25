@@ -1,15 +1,18 @@
 use clap::{error::ErrorKind, Command, Parser};
 use edit::edit;
+
 use rusty_pass::{
     commands::{
         clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
     },
     constants::TEMPLATE_EDITOR_INPUT,
+    database::DatabaseState,
     utils::{
         crypto::encrypt,
         get_database,
-        password::{generate_strict_password, get_master_password, Password},
+        password::{generate_strict_password, get_master_password, has_same_hash, Password},
         path::get_location,
+        write_password_hash_to_file,
     },
 };
 
@@ -18,7 +21,11 @@ fn main() {
     match cli.commands {
         Subcommands::Init(init) => {
             let location = get_location(init.location);
-            get_database(&location).expect("Unable to initialize/read database");
+            let database = get_database(&location).expect("Unable to initialize/read database");
+            if matches!(database.state, DatabaseState::Initializing) {
+                let master_password = get_master_password();
+                write_password_hash_to_file(&master_password);
+            }
         }
         Subcommands::Generate(x) => {
             let password = match x.commands {
@@ -44,6 +51,15 @@ fn main() {
             generate,
         }) => {
             let master_password = get_master_password();
+            if !has_same_hash(&master_password) {
+                let mut cmd = Command::new("Master password");
+                cmd.error(
+                    ErrorKind::InvalidValue,
+                    "Encryption Failed. The master password is incorrect",
+                )
+                .exit();
+            }
+
             let location = get_location(location);
 
             let password = if !generate {
@@ -76,6 +92,15 @@ fn main() {
         }) => {
             let location = get_location(location);
 
+            let master_password = get_master_password();
+            if !has_same_hash(&master_password) {
+                let mut cmd = Command::new("Master password");
+                cmd.error(
+                    ErrorKind::InvalidValue,
+                    "The master password is incorrect. No changes were made",
+                )
+                .exit();
+            }
             let database = get_database(&location).expect("Unable to read database");
             database.clear(&name, like);
         }

@@ -1,6 +1,8 @@
-use std::env;
+use std::{env, fs};
 
+use home::home_dir;
 use rand::{distributions::Uniform, seq::SliceRandom, Rng};
+use sha256::digest;
 
 use crate::constants::{
     DEFAULT_LOWERCASE_LENGTH, DEFAULT_NUMBERS_LENGTH, DEFAULT_SYMBOLS_LENGTH,
@@ -96,10 +98,20 @@ pub fn generate_strict_password() -> String {
 }
 
 pub fn get_master_password() -> String {
-    let master_password = env::var("RUSTY_MASTER_PASSWORD");
+    let master_password_from_env = env::var("RUSTY_MASTER_PASSWORD");
     let mut stdin_master_password = String::from("");
-    if master_password.is_err() {
+    if master_password_from_env.is_err() {
         stdin_master_password = rpassword::prompt_password("Your master password: ").unwrap();
     }
-    master_password.unwrap_or(stdin_master_password)
+    let master_password = master_password_from_env.unwrap_or(stdin_master_password);
+
+    master_password
+}
+
+pub fn has_same_hash(master_password: &String) -> bool {
+    let hash_file = home_dir().unwrap().join("rustdb").join("RUSTY_MASTER_HASH");
+
+    let hash_from_file = fs::read(hash_file).expect("Unable to read file");
+    let hash = digest(master_password.clone());
+    hash_from_file == hash.as_bytes()
 }
