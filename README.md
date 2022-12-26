@@ -1,6 +1,6 @@
 # Rusty-Pass
 
-A command line password manager written in Rust.
+A command line password manager written in Rust. The (encrypted)passwords are stored in an SQLite database
 
 ## About
 
@@ -10,7 +10,7 @@ I hope to support the following features:
 
 - [x] Generate a random password (with minute control over the length and various character groups)
 - [x] Store encrypted passwords
-- [x] Search for websites using Regular Expressions
+- [x] Search for websites using SQLite Regular Expressions 
 - [ ] Import/Export passwords
 
 And that's about it.
