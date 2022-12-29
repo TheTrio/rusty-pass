@@ -34,3 +34,9 @@ fn get_default_database_path() -> PathBuf {
 pub fn get_location(location: Option<PathBuf>) -> PathBuf {
     location.unwrap_or(PathBuf::from(get_default_database_path()))
 }
+
+pub fn get_config_location() -> PathBuf {
+    let home_dir = home::home_dir().expect("Unable to retrieve home directory");
+    let rust_db = home_dir.join(DEFAULT_DIRECTORY_NAME);
+    rust_db.join("config.json")
+}

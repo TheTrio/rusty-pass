@@ -14,3 +14,5 @@ edit = "0.1.4"
 magic-crypt = "3.1.12"
 rpassword = "7.2"
 sha256 = "1.1.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

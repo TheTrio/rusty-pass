@@ -6,13 +6,11 @@ use rusty_pass::{
         clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
     },
     constants::TEMPLATE_EDITOR_INPUT,
-    database::DatabaseState,
     utils::{
         crypto::encrypt,
         get_database,
-        password::{generate_strict_password, get_master_password, has_same_hash, Password},
+        password::{generate_strict_password, get_master_password, Password},
         path::get_location,
-        write_password_hash_to_file,
     },
 };
 
@@ -21,11 +19,8 @@ fn main() {
     match cli.commands {
         Subcommands::Init(init) => {
             let location = get_location(init.location);
-            let database = get_database(&location).expect("Unable to initialize/read database");
-            if matches!(database.state, DatabaseState::Initializing) {
-                let master_password = get_master_password();
-                write_password_hash_to_file(&master_password);
-            }
+            let master_password = get_master_password();
+            get_database(&location, &master_password).expect("Unable to initialize/read database");
         }
         Subcommands::Generate(x) => {
             let password = match x.commands {
@@ -51,7 +46,12 @@ fn main() {
             generate,
         }) => {
             let master_password = get_master_password();
-            if !has_same_hash(&master_password) {
+            let location = get_location(location);
+
+            let database =
+                get_database(&location, &master_password).expect("Unable to read database");
+
+            if !database.config.matches_hash(&location, &master_password) {
                 let mut cmd = Command::new("Master password");
                 cmd.error(
                     ErrorKind::InvalidValue,
@@ -59,8 +59,6 @@ fn main() {
                 )
                 .exit();
             }
-
-            let location = get_location(location);
 
             let password = if !generate {
                 let text = edit(TEMPLATE_EDITOR_INPUT).expect("Unable to read from editor");
@@ -78,12 +76,8 @@ fn main() {
             } else {
                 generate_strict_password()
             };
-            let database = get_database(&location).expect("Unable to read database");
-            database.insert(
-                &name,
-                &username,
-                &encrypt(String::from(master_password), password),
-            )
+
+            database.insert(&name, &username, &encrypt(&master_password, &password))
         }
         Subcommands::Clear(clear::ClearArgs {
             name,
@@ -91,9 +85,10 @@ fn main() {
             pattern: like,
         }) => {
             let location = get_location(location);
-
             let master_password = get_master_password();
-            if !has_same_hash(&master_password) {
+            let database =
+                get_database(&location, &master_password).expect("Unable to read database");
+            if !database.config.matches_hash(&location, &master_password) {
                 let mut cmd = Command::new("Master password");
                 cmd.error(
                     ErrorKind::InvalidValue,
@@ -101,7 +96,7 @@ fn main() {
                 )
                 .exit();
             }
-            let database = get_database(&location).expect("Unable to read database");
+
             database.clear(&name, like);
         }
         Subcommands::List(ListArgs {
@@ -112,8 +107,9 @@ fn main() {
             let master_password = get_master_password();
             let location = get_location(location);
 
-            let database = get_database(&location).expect("Unable to read database");
-            match database.list(name, master_password, pattern) {
+            let database =
+                get_database(&location, &master_password).expect("Unable to read database");
+            match database.list(name, &master_password, pattern) {
                 Ok(_) => (),
                 Err(err) => println!("Encountered Error: {:?}", err.to_string()),
             }

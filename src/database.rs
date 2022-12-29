@@ -2,16 +2,17 @@ use clap::{error::ErrorKind, Command};
 use rusqlite::{Connection, Result, Row};
 use std::path::PathBuf;
 
-use crate::utils::crypto::decrypt;
+use crate::{config::Config, utils::crypto::decrypt};
 pub enum DatabaseState {
     Reading,
     Initializing,
 }
 
 pub struct Database<'a> {
-    location: &'a PathBuf,
+    pub location: &'a PathBuf,
     connection: Connection,
     pub state: DatabaseState,
+    pub config: Config,
 }
 
 #[derive(Debug)]
@@ -32,19 +33,25 @@ impl std::fmt::Display for DatabaseState {
 }
 
 impl<'a> Database<'a> {
-    pub fn new(location: &'a PathBuf) -> Self {
+    pub fn new(location: &'a PathBuf, config: Config) -> Self {
+        let state = if location.exists() {
+            DatabaseState::Reading
+        } else {
+            DatabaseState::Initializing
+        };
+
         Self {
-            state: if location.exists() {
-                DatabaseState::Reading
-            } else {
-                DatabaseState::Initializing
-            },
+            state,
             location,
             connection: Connection::open(location).unwrap(),
+            config,
         }
     }
-    pub fn init(&self) -> Result<(), rusqlite::Error> {
+    pub fn init(&mut self, master_password: &String) -> Result<(), rusqlite::Error> {
         println!("{} database at {:?}", self.state, self.location);
+        self.config
+            .add_if_not_exists(master_password, self.location);
+
         let query = "
         CREATE TABLE IF NOT EXISTS Passwords (
             ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +83,12 @@ impl<'a> Database<'a> {
         }
     }
 
-    pub fn list(&self, name: Option<String>, master_password: String, pattern: bool) -> Result<()> {
+    pub fn list(
+        &self,
+        name: Option<String>,
+        master_password: &String,
+        pattern: bool,
+    ) -> Result<()> {
         let query = if let Some(_) = name {
             if pattern {
                 "SELECT id, name, username, password FROM Passwords WHERE name LIKE (?1);"
@@ -89,7 +101,6 @@ impl<'a> Database<'a> {
         let mut stmt = self.connection.prepare(query)?;
 
         let map_row_to_password = |row: &Row| {
-            let master_password = master_password.clone();
             let password = decrypt(master_password, row.get(3)?);
             if password.is_err() {
                 let mut cmd = Command::new("Master Password");
