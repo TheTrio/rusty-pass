@@ -4,6 +4,10 @@ use crate::constants::{
 };
 use clap::{Args, Subcommand};
 #[derive(Args, Debug)]
+#[command(
+    about = "Generates a password",
+    long_about = "Generates a password with varying levels of control"
+)]
 pub struct GenerateArgs {
     #[command(subcommand)]
     pub commands: GenerateSubcommands,
