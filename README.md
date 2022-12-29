@@ -14,3 +14,13 @@ I hope to support the following features:
 - [ ] Import/Export passwords
 
 And that's about it.
+
+## Running and Developing
+
+This probably goes without saying, but here's the steps anyways - Simply clone the project, and then do
+
+```bash
+cargo build --release
+```
+
+The generated binary is `target/release/rusty-pass`. Run it with `--help` to see the available commands.
