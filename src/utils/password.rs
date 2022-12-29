@@ -5,8 +5,8 @@ use rand::{distributions::Uniform, seq::SliceRandom, Rng};
 use sha256::digest;
 
 use crate::constants::{
-    DEFAULT_LOWERCASE_LENGTH, DEFAULT_NUMBERS_LENGTH, DEFAULT_SYMBOLS_LENGTH,
-    DEFAULT_UPPERCASE_LENGTH, LOWER_CASE, NUMBERS, SYMBOLS, UPPER_CASE,
+    DEFAULT_DIRECTORY_NAME, DEFAULT_LOWERCASE_LENGTH, DEFAULT_NUMBERS_LENGTH,
+    DEFAULT_SYMBOLS_LENGTH, DEFAULT_UPPERCASE_LENGTH, LOWER_CASE, NUMBERS, SYMBOLS, UPPER_CASE,
 };
 
 pub enum Password {
@@ -109,7 +109,10 @@ pub fn get_master_password() -> String {
 }
 
 pub fn has_same_hash(master_password: &String) -> bool {
-    let hash_file = home_dir().unwrap().join("rustdb").join("RUSTY_MASTER_HASH");
+    let hash_file = home_dir()
+        .unwrap()
+        .join(DEFAULT_DIRECTORY_NAME)
+        .join("RUSTY_MASTER_HASH");
 
     let hash_from_file = fs::read(hash_file).expect("Unable to read file");
     let hash = digest(master_password.clone());

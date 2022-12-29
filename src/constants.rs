@@ -6,6 +6,7 @@ pub const TEMPLATE_EDITOR_INPUT: &str = "
 ";
 
 pub const DEFAULT_DATABASE_NAME: &str = "database.db";
+pub const DEFAULT_DIRECTORY_NAME: &str = ".rustypass";
 
 pub const LOWER_CASE: &str = "abcdefghijklmnopqrstuvwxyz";
 pub const UPPER_CASE: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
