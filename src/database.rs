@@ -1,11 +1,14 @@
 use colored::Colorize;
 use rusqlite::{Connection, Result, Row};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{fmt::Display, fs::File, path::PathBuf};
 
 use crate::{
     config::Config,
-    utils::{crypto::decrypt, display_error},
+    utils::{
+        crypto::{decrypt, encrypt},
+        display_error,
+    },
 };
 pub enum DatabaseState {
     Reading,
@@ -19,7 +22,7 @@ pub struct Database<'a> {
     pub config: Config,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Password {
     pub id: usize,
     pub name: String,
@@ -125,7 +128,7 @@ impl<'a> Database<'a> {
         };
         let passwords = self.get_passwords(master_password, query, name)?;
         for password in passwords {
-            println!("{}", password)
+            println!("{}\n", password)
         }
         Ok(())
     }
@@ -180,5 +183,23 @@ impl<'a> Database<'a> {
         };
 
         Ok(password_iter.map(|password| password.unwrap()).collect())
+    }
+
+    pub fn import_from_json(&self, master_password: &String, import_file: &PathBuf) -> Result<()> {
+        let file = File::open(import_file).expect("Unable to open file for import");
+        let passwords: Vec<Password> =
+            serde_json::from_reader(file).expect("Something went wrong while reading file");
+
+        let query = "INSERT INTO passwords (id, name, username, password) VALUES (?1, ?2, ?3, ?4);";
+        let mut stmt = self.connection.prepare(&query).unwrap();
+        for password in passwords {
+            stmt.execute((
+                password.id,
+                password.name,
+                password.username,
+                encrypt(master_password, &password.password),
+            ))?;
+        }
+        Ok(())
     }
 }

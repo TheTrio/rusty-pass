@@ -1,10 +1,11 @@
 use clap::Parser;
+use colored::Colorize;
 use edit::edit;
 
 use rusty_pass::{
     commands::{
-        clear, export::ExportArgs, generate::GenerateSubcommands, insert::InsertArgs,
-        list::ListArgs, Cli, Subcommands,
+        clear, export::ExportArgs, generate::GenerateSubcommands, import::ImportArgs,
+        insert::InsertArgs, list::ListArgs, Cli, Subcommands,
     },
     constants::TEMPLATE_EDITOR_INPUT,
     utils::{
@@ -100,7 +101,11 @@ fn main() {
                 get_database(&location, &master_password).expect("Unable to read database");
             match database.list_passwords(name, &master_password, pattern) {
                 Ok(_) => (),
-                Err(err) => println!("Encountered Error: {:?}", err.to_string()),
+                Err(err) => println!(
+                    "{}: {:}",
+                    "Encountered Error".red(),
+                    err.to_string().yellow()
+                ),
             }
         }
         Subcommands::Export(ExportArgs {
@@ -113,13 +118,33 @@ fn main() {
                 get_database(&location, &master_password).expect("Unable to read database");
 
             if let Some(file_path) = export_file {
-                database.export_as_json_to_file(&master_password, &file_path).unwrap();
+                database
+                    .export_as_json_to_file(&master_password, &file_path)
+                    .unwrap();
             } else {
                 let json_export = database
                     .export_as_json(&master_password)
                     .expect("Unable to export database");
 
                 println!("{}", json_export);
+            }
+        }
+        Subcommands::Import(ImportArgs {
+            import_file,
+            location,
+        }) => {
+            let master_password = get_master_password();
+            let location = get_location(location);
+            let database =
+                get_database(&location, &master_password).expect("Unable to read database");
+
+            match database.import_from_json(&master_password, &import_file) {
+                Ok(_) => (),
+                Err(err) => println!(
+                    "{}: {:}",
+                    "Encountered Error".red(),
+                    err.to_string().yellow()
+                ),
             }
         }
     }

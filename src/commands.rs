@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 pub mod clear;
 pub mod export;
 pub mod generate;
+pub mod import;
 pub mod init;
 pub mod insert;
 pub mod list;
@@ -22,4 +23,5 @@ pub enum Subcommands {
     Clear(clear::ClearArgs),
     List(list::ListArgs),
     Export(export::ExportArgs),
+    Import(import::ImportArgs),
 }
