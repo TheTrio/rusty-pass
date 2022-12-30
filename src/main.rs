@@ -3,7 +3,8 @@ use edit::edit;
 
 use rusty_pass::{
     commands::{
-        clear, generate::GenerateSubcommands, insert::InsertArgs, list::ListArgs, Cli, Subcommands,
+        clear, export::ExportArgs, generate::GenerateSubcommands, insert::InsertArgs,
+        list::ListArgs, Cli, Subcommands,
     },
     constants::TEMPLATE_EDITOR_INPUT,
     utils::{
@@ -97,9 +98,28 @@ fn main() {
 
             let database =
                 get_database(&location, &master_password).expect("Unable to read database");
-            match database.list(name, &master_password, pattern) {
+            match database.list_passwords(name, &master_password, pattern) {
                 Ok(_) => (),
                 Err(err) => println!("Encountered Error: {:?}", err.to_string()),
+            }
+        }
+        Subcommands::Export(ExportArgs {
+            location,
+            export_file,
+        }) => {
+            let master_password = get_master_password();
+            let location = get_location(location);
+            let database =
+                get_database(&location, &master_password).expect("Unable to read database");
+
+            if let Some(file_path) = export_file {
+                database.export_as_json_to_file(&master_password, &file_path).unwrap();
+            } else {
+                let json_export = database
+                    .export_as_json(&master_password)
+                    .expect("Unable to export database");
+
+                println!("{}", json_export);
             }
         }
     }

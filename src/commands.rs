@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 pub mod clear;
+pub mod export;
 pub mod generate;
 pub mod init;
 pub mod insert;
@@ -20,4 +21,5 @@ pub enum Subcommands {
     Insert(insert::InsertArgs),
     Clear(clear::ClearArgs),
     List(list::ListArgs),
+    Export(export::ExportArgs),
 }

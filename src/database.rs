@@ -1,7 +1,7 @@
 use colored::Colorize;
 use rusqlite::{Connection, Result, Row};
 use serde::Serialize;
-use std::{fmt::Display, path::PathBuf};
+use std::{fmt::Display, fs::File, path::PathBuf};
 
 use crate::{
     config::Config,
@@ -108,7 +108,7 @@ impl<'a> Database<'a> {
         }
     }
 
-    pub fn list(
+    pub fn list_passwords(
         &self,
         name: Option<String>,
         master_password: &String,
@@ -123,6 +123,38 @@ impl<'a> Database<'a> {
         } else {
             "SELECT id, name, username, password FROM Passwords"
         };
+        let passwords = self.get_passwords(master_password, query, name)?;
+        for password in passwords {
+            println!("{}", password)
+        }
+        Ok(())
+    }
+
+    pub fn export_as_json_to_file(
+        &self,
+        master_password: &String,
+        file_path: &PathBuf,
+    ) -> Result<()> {
+        let query = "SELECT id, name, username, password FROM Passwords";
+        let passwords = self.get_passwords(master_password, query, None)?;
+        let file = File::create(file_path).expect("Unable to open file for export");
+        serde_json::to_writer_pretty(file, &passwords)
+            .expect("Something went wrong while writing to file");
+        Ok(())
+    }
+    pub fn export_as_json(&self, master_password: &String) -> Result<String> {
+        let query = "SELECT id, name, username, password FROM Passwords";
+        let passwords = self.get_passwords(master_password, query, None)?;
+        let json = serde_json::to_string_pretty(&passwords).expect("Something went wrong");
+        Ok(json)
+    }
+
+    pub fn get_passwords(
+        &self,
+        master_password: &String,
+        query: &str,
+        name: Option<String>,
+    ) -> Result<Vec<Password>> {
         let mut stmt = self.connection.prepare(query)?;
 
         let map_row_to_password = |row: &Row| {
@@ -147,10 +179,6 @@ impl<'a> Database<'a> {
             stmt.query_map((), map_row_to_password)?
         };
 
-        for password in password_iter {
-            println!("{}\n", password.unwrap());
-        }
-
-        Ok(())
+        Ok(password_iter.map(|password| password.unwrap()).collect())
     }
 }
