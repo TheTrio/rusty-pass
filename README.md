@@ -10,8 +10,8 @@ I hope to support the following features:
 
 - [x] Generate a random password (with minute control over the length and various character groups)
 - [x] Store encrypted passwords
-- [x] Search for websites using SQLite Regular Expressions 
-- [ ] Import/Export passwords
+- [x] Search for websites using SQLite Regular Expressions
+- [x] Import/Export passwords
 
 And that's about it.
 
