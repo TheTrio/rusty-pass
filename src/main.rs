@@ -1,4 +1,4 @@
-use clap::{error::ErrorKind, Command, Parser};
+use clap::Parser;
 use edit::edit;
 
 use rusty_pass::{
@@ -8,7 +8,7 @@ use rusty_pass::{
     constants::TEMPLATE_EDITOR_INPUT,
     utils::{
         crypto::encrypt,
-        get_database,
+        display_error, get_database,
         password::{generate_strict_password, get_master_password, Password},
         path::get_location,
     },
@@ -52,12 +52,7 @@ fn main() {
                 get_database(&location, &master_password).expect("Unable to read database");
 
             if !database.config.matches_hash(&location, &master_password) {
-                let mut cmd = Command::new("Master password");
-                cmd.error(
-                    ErrorKind::InvalidValue,
-                    "Encryption Failed. The master password is incorrect",
-                )
-                .exit();
+                display_error("Decryption Failed. The Master Password is incorrect");
             }
 
             let password = if !generate {
@@ -68,9 +63,7 @@ fn main() {
                     .map(String::from)
                     .expect("The password is empty");
                 if password.is_empty() {
-                    let mut cmd = Command::new("Enter password into the editor");
-                    cmd.error(ErrorKind::InvalidValue, "The password cannot be empty")
-                        .exit();
+                    display_error("The password can't be empty");
                 }
                 password
             } else {
@@ -89,12 +82,7 @@ fn main() {
             let database =
                 get_database(&location, &master_password).expect("Unable to read database");
             if !database.config.matches_hash(&location, &master_password) {
-                let mut cmd = Command::new("Master password");
-                cmd.error(
-                    ErrorKind::InvalidValue,
-                    "The master password is incorrect. No changes were made",
-                )
-                .exit();
+                display_error("The master password is incorrect. No changes were made");
             }
 
             database.clear(&name, like);

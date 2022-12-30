@@ -2,7 +2,7 @@ use std::{fs::File, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::{crypto::get_sha256_hash, path::get_config_location};
+use crate::utils::{crypto::get_sha256_hash, display_error, path::get_config_location};
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -40,14 +40,17 @@ impl Config {
             Self { passwords: vec![] }
         }
     }
-    pub fn add_if_not_exists(&mut self, master_password: &String, location: &PathBuf) {
+    pub fn add_if_not_exists(&mut self, master_password_str: &String, location: &PathBuf) {
         let master_password = MasterPassword {
             database_location: location.clone(),
-            hash: get_sha256_hash(master_password),
+            hash: get_sha256_hash(master_password_str),
         };
         if !self.passwords.contains(&master_password) {
             self.passwords.push(master_password);
+        } else if !self.matches_hash(location, master_password_str) {
+            display_error("Invalid master password for this database. Please try again.");
         }
+
         self.write_to_file()
             .expect("Unable to write to config file")
     }
