@@ -1,4 +1,4 @@
-use std::{fs::File, path::PathBuf};
+use std::{collections::HashMap, fs::File, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -6,19 +6,7 @@ use crate::utils::{crypto::get_sha256_hash, display_error, path::get_config_loca
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
-    pub passwords: Vec<MasterPassword>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MasterPassword {
-    pub database_location: PathBuf,
-    pub hash: String,
-}
-
-impl PartialEq for MasterPassword {
-    fn eq(&self, other: &Self) -> bool {
-        self.database_location == other.database_location
-    }
+    pub passwords: HashMap<PathBuf, String>,
 }
 
 impl Config {
@@ -47,17 +35,18 @@ impl Config {
             }
             config.unwrap()
         } else {
-            Self { passwords: vec![] }
+            Self {
+                passwords: HashMap::new(),
+            }
         }
     }
-    pub fn add_if_not_exists(&mut self, master_password_str: &str, location: &PathBuf) {
-        let master_password = MasterPassword {
-            database_location: location.clone(),
-            hash: get_sha256_hash(master_password_str),
-        };
-        if !self.passwords.contains(&master_password) {
-            self.passwords.push(master_password);
-        } else if !self.matches_hash(location, master_password_str) {
+    pub fn add_if_not_exists(&mut self, master_password: &str, location: PathBuf) {
+        let value = self
+            .passwords
+            .entry(location)
+            .or_insert_with(|| get_sha256_hash(master_password));
+
+        if *value != get_sha256_hash(master_password) {
             display_error("Invalid master password for this database. Please try again.");
         }
 
@@ -66,15 +55,12 @@ impl Config {
     }
 
     pub fn matches_hash(&self, location: &PathBuf, entered_master_password: &str) -> bool {
-        let master_password = self
-            .passwords
-            .iter()
-            .find(|password| password.database_location == *location);
-
-        if master_password.is_none() {
+        let hash_from_config = self.passwords.get(location);
+        if hash_from_config.is_none() {
             display_error("Unable to find entry for this database in the config file. Please use 'init' to create a new database.");
         }
-        get_sha256_hash(entered_master_password) == master_password.unwrap().hash
+
+        get_sha256_hash(entered_master_password) == *hash_from_config.unwrap()
     }
 }
 

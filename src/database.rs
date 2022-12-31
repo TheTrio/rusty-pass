@@ -78,7 +78,7 @@ impl<'a> Database<'a> {
             self.location.to_str().unwrap().blue()
         );
         self.config
-            .add_if_not_exists(master_password, self.location);
+            .add_if_not_exists(master_password, self.location.clone());
 
         let query = "
         CREATE TABLE IF NOT EXISTS Passwords (
