@@ -71,7 +71,7 @@ impl<'a> Database<'a> {
             config,
         }
     }
-    pub fn init(&mut self, master_password: &String) -> Result<(), rusqlite::Error> {
+    pub fn init(&mut self, master_password: &str) -> Result<(), rusqlite::Error> {
         println!(
             "{} database at {:}",
             self.state,
@@ -117,7 +117,7 @@ impl<'a> Database<'a> {
         master_password: &String,
         pattern: bool,
     ) -> Result<()> {
-        let query = if let Some(_) = name {
+        let query = if name.is_some() {
             if pattern {
                 "SELECT id, name, username, password FROM Passwords WHERE name LIKE (?1);"
             } else {
@@ -140,7 +140,11 @@ impl<'a> Database<'a> {
     ) -> Result<()> {
         let query = "SELECT id, name, username, password FROM Passwords";
         let passwords = self.get_passwords(master_password, query, None)?;
-        let file = File::create(file_path).expect("Unable to open file for export");
+        let file = File::create(file_path);
+        if let Err(err) = &file {
+            display_error(&format!("Couldn't write to file - {}", err));
+        }
+        let file = file.unwrap();
         serde_json::to_writer_pretty(file, &passwords)
             .expect("Something went wrong while writing to file");
         Ok(())
@@ -186,12 +190,21 @@ impl<'a> Database<'a> {
     }
 
     pub fn import_from_json(&self, master_password: &String, import_file: &PathBuf) -> Result<()> {
-        let file = File::open(import_file).expect("Unable to open file for import");
-        let passwords: Vec<Password> =
-            serde_json::from_reader(file).expect("Something went wrong while reading file");
+        let file = File::create(import_file);
+        if let Err(err) = &file {
+            display_error(&format!("Couldn't write to file - {}", err));
+        }
+        let file = file.unwrap();
+        let passwords: std::result::Result<Vec<Password>, _> = serde_json::from_reader(file);
+
+        if passwords.is_err() {
+            display_error("Unable to parse JSON file. Please check the file contents.");
+        }
+
+        let passwords = passwords.unwrap();
 
         let query = "INSERT INTO passwords (id, name, username, password) VALUES (?1, ?2, ?3, ?4);";
-        let mut stmt = self.connection.prepare(&query).unwrap();
+        let mut stmt = self.connection.prepare(query).unwrap();
         for password in passwords {
             stmt.execute((
                 password.id,

@@ -22,7 +22,7 @@ fn main() {
         Subcommands::Init(init) => {
             let location = get_location(init.location);
             let master_password = get_master_password();
-            get_database(&location, &master_password).expect("Unable to initialize/read database");
+            get_database(&location, &master_password);
         }
         Subcommands::Generate(x) => {
             let password = match x.commands {
@@ -50,8 +50,7 @@ fn main() {
             let master_password = get_master_password();
             let location = get_location(location);
 
-            let database =
-                get_database(&location, &master_password).expect("Unable to read database");
+            let database = get_database(&location, &master_password);
 
             if !database.config.matches_hash(&location, &master_password) {
                 display_error("Decryption Failed. The Master Password is incorrect");
@@ -59,7 +58,7 @@ fn main() {
 
             let password = if !generate {
                 let text = edit(TEMPLATE_EDITOR_INPUT).expect("Unable to read from editor");
-                let mut lines = text.split("\n");
+                let mut lines = text.split('\n');
                 let password = lines
                     .next()
                     .map(String::from)
@@ -81,8 +80,7 @@ fn main() {
         }) => {
             let location = get_location(location);
             let master_password = get_master_password();
-            let database =
-                get_database(&location, &master_password).expect("Unable to read database");
+            let database = get_database(&location, &master_password);
             if !database.config.matches_hash(&location, &master_password) {
                 display_error("The master password is incorrect. No changes were made");
             }
@@ -97,8 +95,7 @@ fn main() {
             let master_password = get_master_password();
             let location = get_location(location);
 
-            let database =
-                get_database(&location, &master_password).expect("Unable to read database");
+            let database = get_database(&location, &master_password);
             match database.list_passwords(name, &master_password, pattern) {
                 Ok(_) => (),
                 Err(err) => println!(
@@ -114,8 +111,7 @@ fn main() {
         }) => {
             let master_password = get_master_password();
             let location = get_location(location);
-            let database =
-                get_database(&location, &master_password).expect("Unable to read database");
+            let database = get_database(&location, &master_password);
 
             if let Some(file_path) = export_file {
                 database
@@ -135,8 +131,7 @@ fn main() {
         }) => {
             let master_password = get_master_password();
             let location = get_location(location);
-            let database =
-                get_database(&location, &master_password).expect("Unable to read database");
+            let database = get_database(&location, &master_password);
 
             match database.import_from_json(&master_password, &import_file) {
                 Ok(_) => (),

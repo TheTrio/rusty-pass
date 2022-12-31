@@ -32,15 +32,25 @@ impl Config {
     pub fn new() -> Self {
         let config_file_path = get_config_location();
         if config_file_path.exists() {
-            let file = File::open(config_file_path).expect("Unable to read config file");
+            let file = File::open(config_file_path);
+            if let Err(err) = &file {
+                display_error(&format!("Unable to read config file - {}", err));
+            }
+            let file = file.unwrap();
+
             let rdr = std::io::BufReader::new(file);
-            let config: Config = serde_json::from_reader(rdr).expect("Unable to parse config file");
-            config
+            let config: Result<Config, _> = serde_json::from_reader(rdr);
+            if config.is_err() {
+                display_error(
+                    "Unable to read config file. Please delete the config file and try again",
+                );
+            }
+            config.unwrap()
         } else {
             Self { passwords: vec![] }
         }
     }
-    pub fn add_if_not_exists(&mut self, master_password_str: &String, location: &PathBuf) {
+    pub fn add_if_not_exists(&mut self, master_password_str: &str, location: &PathBuf) {
         let master_password = MasterPassword {
             database_location: location.clone(),
             hash: get_sha256_hash(master_password_str),
@@ -55,13 +65,21 @@ impl Config {
             .expect("Unable to write to config file")
     }
 
-    pub fn matches_hash(&self, location: &PathBuf, entered_master_password: &String) -> bool {
-        let master_password = (&self.passwords)
-            .into_iter()
-            .filter(|password| password.database_location == *location)
-            .next()
-            .expect("Unable to find entry for this database in the config file. Please use 'init' to create a new database.");
+    pub fn matches_hash(&self, location: &PathBuf, entered_master_password: &str) -> bool {
+        let master_password = self
+            .passwords
+            .iter()
+            .find(|password| password.database_location == *location);
 
-        return get_sha256_hash(&entered_master_password) == master_password.hash;
+        if master_password.is_none() {
+            display_error("Unable to find entry for this database in the config file. Please use 'init' to create a new database.");
+        }
+        get_sha256_hash(entered_master_password) == master_password.unwrap().hash
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
     }
 }

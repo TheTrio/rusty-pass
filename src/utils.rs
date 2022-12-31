@@ -8,14 +8,13 @@ pub mod crypto;
 pub mod password;
 pub mod path;
 
-pub fn get_database<'a>(
-    location: &'a PathBuf,
-    master_password: &'a String,
-) -> Result<Database<'a>, rusqlite::Error> {
+pub fn get_database<'a>(location: &'a PathBuf, master_password: &'a str) -> Database<'a> {
     let config = Config::new();
     let mut database = Database::new(location, config);
-    database.init(master_password)?;
-    Ok(database)
+    if let Err(err) = database.init(master_password) {
+        display_error(&format!("Unable to initialize database: {}", err));
+    }
+    database
 }
 
 pub fn display_error(error_message: &str) {

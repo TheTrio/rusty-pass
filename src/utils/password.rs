@@ -101,7 +101,6 @@ pub fn get_master_password() -> String {
     if master_password_from_env.is_err() {
         stdin_master_password = rpassword::prompt_password("Your master password: ").unwrap();
     }
-    let master_password = master_password_from_env.unwrap_or(stdin_master_password);
 
-    master_password
+    master_password_from_env.unwrap_or(stdin_master_password)
 }
